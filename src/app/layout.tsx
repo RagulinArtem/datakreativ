@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AdVision — AI-анализ рекламных креативов",
+  title: "ДатаКреатив — AI-анализ рекламных креативов",
   description:
     "Оцените эффективность рекламного креатива до запуска кампании с помощью AI",
 };
