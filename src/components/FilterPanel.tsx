@@ -104,7 +104,7 @@ export default function FilterPanel({ filters, onChange }: Props) {
           hint={
             filters.creativeType === "banner"
               ? "для баннеров используем только CTR"
-              : "по умолчанию для OLV выбран VTR"
+              : "для OLV используем только VTR"
           }
         >
           <SelectChips

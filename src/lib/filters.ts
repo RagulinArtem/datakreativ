@@ -125,11 +125,7 @@ export function getKpiOptions(
 ): { key: KpiKey; label: string }[] {
   return creativeType === "banner"
     ? KPI_OPTIONS.filter((option) => option.key === "ctr")
-    : KPI_OPTIONS.slice().sort((left, right) => {
-        if (left.key === "vtr") return -1;
-        if (right.key === "vtr") return 1;
-        return 0;
-      });
+    : KPI_OPTIONS.filter((option) => option.key === "vtr");
 }
 
 export function getDefaultFiltersForType(creativeType: CreativeTypeKey): Filters {
