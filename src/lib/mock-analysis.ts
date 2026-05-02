@@ -1,18 +1,29 @@
-// Mock AI analysis engine
-// Designed for easy replacement with real AI (Claude API / OpenAI Vision)
+// Mock AI analysis engine for MVP.
+// The structure is ready to be replaced with a real model, but the output is
+// intentionally human-readable and tailored to the selected campaign context.
 
-import { Filters, CtrPrediction, predictCtr } from "./filters";
+import {
+  Filters,
+  PerformancePrediction,
+  predictPerformance,
+} from "./filters";
+
+interface AnalysisItem {
+  score: number;
+  label: string;
+  details: string;
+}
 
 export interface AnalysisResult {
   score: number;
   efficiency: string;
-  prediction: CtrPrediction;
+  prediction: PerformancePrediction;
   filters: Filters;
   elements: {
-    text: { score: number; label: string; details: string };
-    visual: { score: number; label: string; details: string };
-    cta: { score: number; label: string; details: string };
-    composition: { score: number; label: string; details: string };
+    text: AnalysisItem;
+    visual: AnalysisItem;
+    message: AnalysisItem;
+    cta: AnalysisItem;
   };
   strengths: string[];
   weaknesses: string[];
@@ -21,187 +32,384 @@ export interface AnalysisResult {
 
 interface AnalysisTemplate {
   score: number;
-  efficiency: string;
   elements: AnalysisResult["elements"];
   strengths: string[];
   weaknesses: string[];
   recommendations: string[];
 }
 
-const analysisTemplates: AnalysisTemplate[] = [
+const bannerTemplates: AnalysisTemplate[] = [
   {
-    score: 78,
-    efficiency: "Высокая",
+    score: 79,
     elements: {
-      text: { score: 72, label: "Текст", details: "Заголовок читаемый, но длинноват. Рекомендуется сократить до 5-7 слов для лучшего восприятия." },
-      visual: { score: 85, label: "Визуал", details: "Хороший контраст и цветовая гамма. Главный объект выделен, фокус внимания направлен верно." },
-      cta: { score: 65, label: "Призыв к действию", details: "CTA присутствует, но недостаточно заметен. Увеличьте размер кнопки и контраст." },
-      composition: { score: 80, label: "Композиция", details: "Сбалансированная компоновка элементов. Визуальная иерархия выстроена корректно." },
+      text: {
+        score: 74,
+        label: "Текст",
+        details:
+          "Текст читается быстро, но заголовок можно сократить, чтобы усилить первый контакт.",
+      },
+      visual: {
+        score: 82,
+        label: "Визуал",
+        details:
+          "Контраст между главным объектом и фоном хороший, внимание сразу уходит в нужную зону.",
+      },
+      message: {
+        score: 76,
+        label: "Ключевое сообщение",
+        details:
+          "Основное обещание понятно, но можно сделать его конкретнее и убрать второстепенные акценты.",
+      },
+      cta: {
+        score: 68,
+        label: "CTA",
+        details:
+          "Призыв к действию есть, но он не доминирует в макете и теряется рядом с текстом.",
+      },
     },
     strengths: [
-      "Сильная визуальная иерархия",
-      "Уместная цветовая палитра",
-      "Продукт в фокусе внимания",
+      "Считываемый визуальный фокус",
+      "Понятная структура баннера",
+      "Креатив не перегружен лишними элементами",
     ],
     weaknesses: [
-      "CTA-кнопка малозаметна",
-      "Заголовок перегружен текстом",
+      "CTA недостаточно заметен",
+      "Заголовок можно сделать короче",
     ],
     recommendations: [
-      "Сделайте CTA-кнопку более контрастной и увеличьте её размер",
-      "Сократите заголовок до 5-7 слов",
-      "Добавьте элемент срочности (ограниченное предложение, таймер)",
+      "Усилить контраст CTA и добавить более прямую формулировку действия",
+      "Сократить заголовок до одной ключевой мысли",
+      "Оставить один главный визуальный акцент вместо нескольких конкурирующих деталей",
     ],
   },
   {
-    score: 62,
-    efficiency: "Средняя",
+    score: 63,
     elements: {
-      text: { score: 55, label: "Текст", details: "Слишком много текста на креативе. Читабельность снижена из-за мелкого шрифта." },
-      visual: { score: 70, label: "Визуал", details: "Изображение качественное, но фон конкурирует с основным сообщением." },
-      cta: { score: 50, label: "Призыв к действию", details: "CTA отсутствует или не выделен. Пользователь не понимает, что делать дальше." },
-      composition: { score: 68, label: "Композиция", details: "Элементы расположены хаотично. Нет чёткой точки входа для взгляда." },
+      text: {
+        score: 58,
+        label: "Текст",
+        details:
+          "Текста заметно больше, чем нужно для первого экрана, из-за этого баннер читается медленно.",
+      },
+      visual: {
+        score: 66,
+        label: "Визуал",
+        details:
+          "Визуал качественный, но фон и декоративные элементы перетягивают внимание на себя.",
+      },
+      message: {
+        score: 60,
+        label: "Ключевое сообщение",
+        details:
+          "Смысл креатива понятен только после чтения нескольких блоков, а не с первого взгляда.",
+      },
+      cta: {
+        score: 54,
+        label: "CTA",
+        details:
+          "Призыв к действию либо слишком общий, либо визуально не отделён от остальных элементов.",
+      },
     },
     strengths: [
-      "Качественное изображение продукта",
-      "Узнаваемый бренд",
+      "Есть базовая логика композиции",
+      "Сообщение релевантно задаче кампании",
     ],
     weaknesses: [
-      "Отсутствует явный CTA",
-      "Перегруженность текстом",
-      "Нет визуальной иерархии",
+      "Перегрузка второстепенными деталями",
+      "CTA не ведёт пользователя к следующему шагу",
+      "Сообщение читается не с первого взгляда",
     ],
     recommendations: [
-      "Добавьте яркую CTA-кнопку с чётким призывом",
-      "Уберите 60% текста, оставьте только ключевое сообщение",
-      "Упростите фон, чтобы продукт был в центре внимания",
-      "Используйте правило третей для композиции",
+      "Убрать часть текста и оставить только главное обещание",
+      "Ослабить фон или декоративные элементы, чтобы усилить продукт",
+      "Сделать CTA более конкретным: например, \"Получить предложение\" вместо нейтральной формулировки",
     ],
   },
   {
-    score: 91,
-    efficiency: "Очень высокая",
+    score: 87,
     elements: {
-      text: { score: 88, label: "Текст", details: "Краткий, ёмкий заголовок. Шрифт хорошо читается, контраст с фоном высокий." },
-      visual: { score: 95, label: "Визуал", details: "Отличная работа с цветом и светом. Продукт представлен максимально привлекательно." },
-      cta: { score: 90, label: "Призыв к действию", details: "CTA яркий, заметный и понятный. Расположен в оптимальной зоне внимания." },
-      composition: { score: 89, label: "Композиция", details: "Идеальный баланс элементов. Взгляд естественно следует от заголовка к продукту и CTA." },
+      text: {
+        score: 84,
+        label: "Текст",
+        details:
+          "Короткий и понятный заголовок хорошо поддерживает сценарий быстрого сканирования баннера.",
+      },
+      visual: {
+        score: 90,
+        label: "Визуал",
+        details:
+          "Главный объект выделен уверенно, а цветовые контрасты помогают быстро считать смысл.",
+      },
+      message: {
+        score: 85,
+        label: "Ключевое сообщение",
+        details:
+          "Сообщение раскрыто ясно: пользователь понимает, что предлагают и почему это важно.",
+      },
+      cta: {
+        score: 82,
+        label: "CTA",
+        details:
+          "CTA заметен и поддерживает остальную структуру, не споря с главным сообщением.",
+      },
     },
     strengths: [
-      "Превосходная визуальная иерархия",
-      "Чёткий и заметный CTA",
-      "Минимализм в тексте — только суть",
-      "Эмоциональный визуал",
-    ],
-    weaknesses: [
-      "Можно усилить элемент социального доказательства",
-    ],
-    recommendations: [
-      "Добавьте отзыв или рейтинг для повышения доверия",
-      "Протестируйте альтернативную цветовую схему CTA",
-    ],
-  },
-  {
-    score: 45,
-    efficiency: "Низкая",
-    elements: {
-      text: { score: 35, label: "Текст", details: "Текст плохо читается из-за низкого контраста с фоном. Шрифт слишком мелкий." },
-      visual: { score: 50, label: "Визуал", details: "Изображение размытое или низкого качества. Не вызывает эмоциональный отклик." },
-      cta: { score: 40, label: "Призыв к действию", details: "CTA сливается с остальными элементами. Нет чёткого указания на действие." },
-      composition: { score: 48, label: "Композиция", details: "Элементы конкурируют за внимание. Нет единой точки фокуса." },
-    },
-    strengths: [
-      "Релевантная тематика",
-    ],
-    weaknesses: [
-      "Низкое качество изображения",
-      "Нечитаемый текст",
-      "CTA не выделен",
-      "Хаотичная композиция",
-    ],
-    recommendations: [
-      "Используйте изображение высокого разрешения",
-      "Увеличьте контраст текста — белый на тёмном или тёмный на светлом",
-      "Выделите CTA цветом и размером",
-      "Определите одну ключевую мысль и постройте вокруг неё композицию",
-      "Добавьте «воздух» между элементами",
-    ],
-  },
-  {
-    score: 83,
-    efficiency: "Высокая",
-    elements: {
-      text: { score: 80, label: "Текст", details: "Хороший баланс информативности и краткости. Ключевое УТП считывается за 2 секунды." },
-      visual: { score: 88, label: "Визуал", details: "Яркие, насыщенные цвета привлекают внимание. Продукт показан в контексте использования." },
-      cta: { score: 75, label: "Призыв к действию", details: "CTA присутствует и заметен, но формулировка могла бы быть более побуждающей." },
-      composition: { score: 85, label: "Композиция", details: "Профессиональная компоновка. Z-паттерн просмотра реализован корректно." },
-    },
-    strengths: [
-      "Продукт показан в контексте использования",
-      "Яркая, запоминающаяся палитра",
       "Быстро считываемое УТП",
+      "Хороший баланс текста и визуала",
+      "CTA естественно завершает маршрут внимания",
     ],
     weaknesses: [
-      "CTA можно сделать более побуждающим",
-      "Не хватает элемента ограниченности предложения",
+      "Можно протестировать более сильный триггер срочности",
     ],
     recommendations: [
-      "Замените «Подробнее» на «Получить скидку 30%» или аналогичный побуждающий текст",
-      "Добавьте таймер или фразу «Только до...»",
-      "Рассмотрите добавление иконок доверия (гарантия, бесплатная доставка)",
+      "Добавить ограничитель по времени или количеству, если это уместно для оффера",
+      "Проверить альтернативную формулировку CTA с более сильным действием",
+    ],
+  },
+];
+
+const olvTemplates: AnalysisTemplate[] = [
+  {
+    score: 81,
+    elements: {
+      text: {
+        score: 75,
+        label: "Текст / титры",
+        details:
+          "Титры читаемы, но первые секунды можно сделать ещё лаконичнее, чтобы не перегружать старт ролика.",
+      },
+      visual: {
+        score: 84,
+        label: "Первые кадры",
+        details:
+          "Старт ролика визуально цепляет и быстро задаёт контекст, что хорошо для удержания просмотра.",
+      },
+      message: {
+        score: 79,
+        label: "Ключевое сообщение",
+        details:
+          "Главное обещание проявляется вовремя, но бренд можно вывести в кадр чуть раньше.",
+      },
+      cta: {
+        score: 70,
+        label: "CTA / финальный экран",
+        details:
+          "Финальный экран понятен, однако призыв к действию не самый сильный с точки зрения клика или досмотра.",
+      },
+    },
+    strengths: [
+      "Есть хороший хук в начале ролика",
+      "Визуальный темп удерживает внимание",
+      "Сообщение не теряется внутри сюжета",
+    ],
+    weaknesses: [
+      "Бренд можно показать раньше",
+      "Финальный CTA можно сделать убедительнее",
+    ],
+    recommendations: [
+      "Вынести бренд или логотип ближе к первым секундам ролика",
+      "Сделать финальный экран контрастнее и короче",
+      "Упростить титры в первой половине ролика",
+    ],
+  },
+  {
+    score: 66,
+    elements: {
+      text: {
+        score: 61,
+        label: "Текст / титры",
+        details:
+          "Титров многовато для мобильного просмотра, поэтому часть смысла теряется без паузы.",
+      },
+      visual: {
+        score: 64,
+        label: "Первые кадры",
+        details:
+          "Первые секунды не дают достаточно сильного повода смотреть дальше, ролик стартует слишком спокойно.",
+      },
+      message: {
+        score: 63,
+        label: "Ключевое сообщение",
+        details:
+          "Основной смысл проявляется не сразу, из-за этого ролик теряет часть потенциальных досмотров.",
+      },
+      cta: {
+        score: 56,
+        label: "CTA / финальный экран",
+        details:
+          "Финальная сцена передаёт действие неявно, поэтому клик или переход выглядят необязательными.",
+      },
+    },
+    strengths: [
+      "Есть логика сюжета",
+      "Ролик можно улучшить точечными правками без полной пересборки",
+    ],
+    weaknesses: [
+      "Слабый хук в начале",
+      "Сообщение раскрывается поздно",
+      "Финальный кадр не фиксирует действие",
+    ],
+    recommendations: [
+      "Перенести ключевую мысль в первые 3 секунды ролика",
+      "Сократить количество титров и укрупнить основной текст",
+      "Сделать финальный экран более конкретным: одно действие, один акцент",
+    ],
+  },
+  {
+    score: 89,
+    elements: {
+      text: {
+        score: 86,
+        label: "Текст / титры",
+        details:
+          "Титры короткие и помогают ролику, не перегружая пользователя лишними словами.",
+      },
+      visual: {
+        score: 91,
+        label: "Первые кадры",
+        details:
+          "Старт ролика цепляет сразу и задаёт правильный темп для удержания внимания.",
+      },
+      message: {
+        score: 88,
+        label: "Ключевое сообщение",
+        details:
+          "Пользователь быстро понимает, о чём ролик и какую выгоду предлагает продукт.",
+      },
+      cta: {
+        score: 84,
+        label: "CTA / финальный экран",
+        details:
+          "Финальный экран чистый и понятный: сообщение завершает ролик без лишнего шума.",
+      },
+    },
+    strengths: [
+      "Сильный хук с первых секунд",
+      "Чистая подача ключевого обещания",
+      "Финальный экран не перегружен",
+    ],
+    weaknesses: [
+      "Можно протестировать более выраженный бренд-момент в середине ролика",
+    ],
+    recommendations: [
+      "Проверить альтернативный финальный кадр с более заметным брендингом",
+      "Сохранить быстрый темп монтажа в начале ролика",
     ],
   },
 ];
 
 export function getRandomAnalysis(filters: Filters): AnalysisResult {
-  const idx = Math.floor(Math.random() * analysisTemplates.length);
-  const tpl = JSON.parse(JSON.stringify(analysisTemplates[idx])) as AnalysisTemplate;
+  const templates =
+    filters.creativeType === "banner" ? bannerTemplates : olvTemplates;
+  const template = structuredClone(
+    templates[Math.floor(Math.random() * templates.length)]
+  );
 
-  // Лёгкая рандомизация скоринга (±5)
-  const jitter = () => Math.floor(Math.random() * 11) - 5;
-  const clamp = (v: number) => Math.max(0, Math.min(100, v));
+  const jitter = () => Math.floor(Math.random() * 9) - 4;
+  const clamp = (value: number) => Math.max(0, Math.min(100, value));
 
-  const score = clamp(tpl.score + jitter());
+  const score = clamp(template.score + jitter());
   const elements = {
-    text: { ...tpl.elements.text, score: clamp(tpl.elements.text.score + jitter()) },
-    visual: { ...tpl.elements.visual, score: clamp(tpl.elements.visual.score + jitter()) },
-    cta: { ...tpl.elements.cta, score: clamp(tpl.elements.cta.score + jitter()) },
-    composition: { ...tpl.elements.composition, score: clamp(tpl.elements.composition.score + jitter()) },
+    text: {
+      ...template.elements.text,
+      score: clamp(template.elements.text.score + jitter()),
+    },
+    visual: {
+      ...template.elements.visual,
+      score: clamp(template.elements.visual.score + jitter()),
+    },
+    message: {
+      ...template.elements.message,
+      score: clamp(template.elements.message.score + jitter()),
+    },
+    cta: {
+      ...template.elements.cta,
+      score: clamp(template.elements.cta.score + jitter()),
+    },
   };
 
-  const prediction = predictCtr(score, filters);
-
-  // Контекстуальные рекомендации зависят от выбранной площадки
-  const platformTip = getPlatformTip(filters);
-  const recommendations = platformTip
-    ? [...tpl.recommendations, platformTip]
-    : tpl.recommendations;
+  const prediction = predictPerformance(score, filters);
+  const recommendations = dedupeRecommendations([
+    ...template.recommendations,
+    ...getContextualRecommendations(filters),
+  ]).slice(0, 4);
 
   return {
     score,
-    efficiency: tpl.efficiency,
+    efficiency: getEfficiencyLabel(score),
     prediction,
     filters,
     elements,
-    strengths: tpl.strengths,
-    weaknesses: tpl.weaknesses,
+    strengths: template.strengths,
+    weaknesses: template.weaknesses,
     recommendations,
   };
 }
 
-function getPlatformTip(filters: Filters): string | null {
-  switch (filters.platform) {
-    case "instagram":
-      return "Для Instagram адаптируйте креатив под формат 9:16 и добавьте динамику в первые 3 секунды";
-    case "vk":
-      return "Для ВКонтакте усильте эмоциональный посыл — пользователи площадки лучше реагируют на эмпатичный контент";
-    case "yandex":
-      return "Для Яндекс.Директ сделайте акцент на УТП и цене — пользователь ищет конкретное решение";
-    case "telegram":
-      return "Для Telegram Ads сократите текст до 1-2 фраз и используйте нативный, не «рекламный» тон";
-    case "mytarget":
-      return "Для myTarget учитывайте старшую аудиторию: укрупните шрифт и используйте простые формулировки";
-    default:
-      return null;
+function getContextualRecommendations(filters: Filters): string[] {
+  const recommendations: string[] = [];
+
+  if (filters.device === "mobile") {
+    recommendations.push(
+      "Проверьте, что ключевой текст и CTA считываются без приближения на mobile-экране"
+    );
   }
+
+  if (filters.creativeType === "banner") {
+    if (filters.placementFormat === "native") {
+      recommendations.push(
+        "Для native-формата сделайте визуал менее похожим на классический баннер и ближе к контентной подаче"
+      );
+    }
+
+    if (filters.placementFormat === "fullscreen") {
+      recommendations.push(
+        "Для fullscreen-формата оставьте один главный акцент на первом экране, чтобы избежать визуального шума"
+      );
+    }
+  }
+
+  if (filters.creativeType === "olv") {
+    if (filters.videoLength === "30plus") {
+      recommendations.push(
+        "Сместите бренд и ключевое обещание ближе к началу ролика: в длинных видео удержание падает быстрее"
+      );
+    }
+
+    if (filters.videoLength === "6s") {
+      recommendations.push(
+        "Для короткого ролика оставьте одну мысль и один CTA: 6 секунд не прощают лишние сообщения"
+      );
+    }
+
+    if (filters.placementFormat === "rewarded") {
+      recommendations.push(
+        "В rewarded video важно показать ценность ролика до момента награды, иначе досмотр будет формальным"
+      );
+    }
+  }
+
+  if (filters.kpi === "ctr") {
+    recommendations.push(
+      "Если цель — CTR, сделайте действие максимально конкретным и визуально отделите CTA от остального сообщения"
+    );
+  }
+
+  if (filters.kpi === "vtr") {
+    recommendations.push(
+      "Если цель — VTR, усилите первые секунды ролика и уберите все элементы, которые тормозят старт просмотра"
+    );
+  }
+
+  return recommendations;
+}
+
+function getEfficiencyLabel(score: number): string {
+  if (score >= 75) return "Выше среднего";
+  if (score <= 54) return "Ниже среднего";
+  return "Средний";
+}
+
+function dedupeRecommendations(items: string[]): string[] {
+  return Array.from(new Set(items));
 }

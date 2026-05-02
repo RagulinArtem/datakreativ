@@ -1,62 +1,86 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { CreativeTypeKey, KpiKey } from "@/lib/filters";
+import { useEffect, useMemo, useState } from "react";
 
-const stages = [
-  "Загрузка изображения...",
-  "Определение объектов на креативе...",
-  "Анализ текстовых элементов...",
-  "Оценка визуальной композиции...",
-  "Проверка CTA-элементов...",
-  "Генерация рекомендаций...",
-  "Формирование отчёта...",
-];
+interface Props {
+  creativeType: CreativeTypeKey;
+  kpi: KpiKey;
+}
 
-export default function AnalysisLoader() {
+export default function AnalysisLoader({ creativeType, kpi }: Props) {
+  const stages = useMemo(
+    () =>
+      creativeType === "banner"
+        ? [
+            "Подготовка креатива к анализу...",
+            "Проверка читаемости текста...",
+            "Оценка визуального контраста...",
+            "Проверка перегруженности элементов...",
+            `Подбор бенчмарков для ${kpi.toUpperCase()}...`,
+            "Формирование рекомендаций...",
+          ]
+        : [
+            "Подготовка ролика к анализу...",
+            "Оценка первых секунд видео...",
+            "Проверка титров и ключевого сообщения...",
+            "Анализ финального экрана и CTA...",
+            `Подбор бенчмарков для ${kpi.toUpperCase()}...`,
+            "Формирование рекомендаций...",
+          ],
+    [creativeType, kpi]
+  );
+
   const [stage, setStage] = useState(0);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     const stageInterval = setInterval(() => {
-      setStage((s) => (s < stages.length - 1 ? s + 1 : s));
-    }, 700);
+      setStage((current) => (current < stages.length - 1 ? current + 1 : current));
+    }, 850);
 
     const progressInterval = setInterval(() => {
-      setProgress((p) => Math.min(p + Math.random() * 8 + 2, 95));
-    }, 200);
+      setProgress((current) => Math.min(current + Math.random() * 8 + 3, 95));
+    }, 220);
 
     return () => {
       clearInterval(stageInterval);
       clearInterval(progressInterval);
     };
-  }, []);
+  }, [stages]);
 
   return (
-    <div className="flex flex-col items-center gap-8 py-20 page-transition">
-      {/* Animated brain/scan icon */}
+    <div className="page-transition flex flex-col items-center gap-8 py-20">
       <div className="relative">
-        <div className="h-24 w-24 rounded-full border-2 border-teal-500/20 flex items-center justify-center">
-          <div className="h-16 w-16 rounded-full border-2 border-teal-500/40 flex items-center justify-center animate-spin" style={{ animationDuration: "3s" }}>
+        <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-teal-500/20">
+          <div
+            className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-teal-500/40 animate-spin"
+            style={{ animationDuration: "3s" }}
+          >
             <div className="h-8 w-8 rounded-full bg-teal-500/20 animate-pulse-glow" />
           </div>
         </div>
-        {/* Orbiting dots */}
-        <div className="absolute inset-0 animate-spin" style={{ animationDuration: "2s" }}>
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1 h-2 w-2 rounded-full bg-teal-400" />
+        <div
+          className="absolute inset-0 animate-spin"
+          style={{ animationDuration: "2s" }}
+        >
+          <div className="absolute left-1/2 top-0 h-2 w-2 -translate-x-1/2 -translate-y-1 rounded-full bg-teal-400" />
         </div>
-        <div className="absolute inset-0 animate-spin" style={{ animationDuration: "3s", animationDirection: "reverse" }}>
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1 h-1.5 w-1.5 rounded-full bg-teal-300" />
+        <div
+          className="absolute inset-0 animate-spin"
+          style={{ animationDuration: "3s", animationDirection: "reverse" }}
+        >
+          <div className="absolute bottom-0 left-1/2 h-1.5 w-1.5 -translate-x-1/2 translate-y-1 rounded-full bg-teal-300" />
         </div>
       </div>
 
       <div className="flex flex-col items-center gap-3">
         <h3 className="text-xl font-semibold">AI анализирует креатив</h3>
-        <p className="text-sm text-teal-400 h-5 transition-all duration-300">
+        <p className="h-5 text-center text-sm text-teal-400 transition-all duration-300">
           {stages[stage]}
         </p>
       </div>
 
-      {/* Progress bar */}
       <div className="w-full max-w-sm">
         <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/5">
           <div

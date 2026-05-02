@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getRandomAnalysis } from "@/lib/mock-analysis";
-import { DEFAULT_FILTERS, Filters } from "@/lib/filters";
+import { DEFAULT_FILTERS, Filters, normalizeFilters } from "@/lib/filters";
 
 export async function POST(request: Request) {
   // Имитация задержки AI-обработки (3-6 секунд)
@@ -10,7 +10,9 @@ export async function POST(request: Request) {
   let filters: Filters = DEFAULT_FILTERS;
   try {
     const body = await request.json();
-    if (body && body.filters) filters = { ...DEFAULT_FILTERS, ...body.filters };
+    if (body && body.filters) {
+      filters = normalizeFilters({ ...DEFAULT_FILTERS, ...body.filters });
+    }
   } catch {
     // тело пустое — используем дефолты
   }

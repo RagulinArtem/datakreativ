@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "ДатаКреатив — AI-анализ рекламных креативов",
   description:
-    "Оцените эффективность рекламного креатива до запуска кампании с помощью AI",
+    "Оценивайте баннеры и OLV-креативы до запуска кампании: прогноз CTR или VTR, оценка качества и рекомендации",
 };
 
 export default function RootLayout({

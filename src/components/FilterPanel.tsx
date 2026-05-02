@@ -1,12 +1,16 @@
 "use client";
 
 import {
+  AGES,
+  CREATIVE_TYPES,
+  DEVICES,
   Filters,
   NICHES,
-  PLATFORMS,
-  GOALS,
-  AGES,
-  GENDERS,
+  VIDEO_LENGTHS,
+  getDefaultFiltersForType,
+  getKpiOptions,
+  getPlacementOptions,
+  normalizeFilters,
 } from "@/lib/filters";
 
 interface Props {
@@ -15,6 +19,27 @@ interface Props {
 }
 
 export default function FilterPanel({ filters, onChange }: Props) {
+  const placementOptions = getPlacementOptions(filters.creativeType);
+  const kpiOptions = getKpiOptions(filters.creativeType);
+
+  const updateFilters = (patch: Partial<Filters>) => {
+    onChange(normalizeFilters({ ...filters, ...patch }));
+  };
+
+  const updateCreativeType = (creativeType: Filters["creativeType"]) => {
+    const defaults = getDefaultFiltersForType(creativeType);
+
+    onChange(
+      normalizeFilters({
+        ...defaults,
+        creativeType,
+        niche: filters.niche,
+        age: filters.age,
+        device: filters.device,
+      })
+    );
+  };
+
   return (
     <div className="glass-card p-6">
       <div className="mb-5 flex items-center gap-2">
@@ -40,43 +65,68 @@ export default function FilterPanel({ filters, onChange }: Props) {
       </div>
 
       <div className="grid gap-5 md:grid-cols-2">
+        <FilterGroup label="Тип креатива">
+          <SelectChips
+            options={CREATIVE_TYPES}
+            value={filters.creativeType}
+            onChange={updateCreativeType}
+          />
+        </FilterGroup>
+
+        <FilterGroup label="Формат размещения">
+          <SelectChips
+            options={placementOptions}
+            value={filters.placementFormat}
+            onChange={(placementFormat) => updateFilters({ placementFormat })}
+          />
+        </FilterGroup>
+
+        {filters.creativeType === "olv" && (
+          <FilterGroup label="Длина видео">
+            <SelectChips
+              options={VIDEO_LENGTHS}
+              value={filters.videoLength ?? VIDEO_LENGTHS[0].key}
+              onChange={(videoLength) => updateFilters({ videoLength })}
+            />
+          </FilterGroup>
+        )}
+
+        <FilterGroup label="Устройство">
+          <SelectChips
+            options={DEVICES}
+            value={filters.device}
+            onChange={(device) => updateFilters({ device })}
+          />
+        </FilterGroup>
+
+        <FilterGroup
+          label="KPI кампании"
+          hint={
+            filters.creativeType === "banner"
+              ? "для баннеров используем только CTR"
+              : "по умолчанию для OLV выбран VTR"
+          }
+        >
+          <SelectChips
+            options={kpiOptions}
+            value={filters.kpi}
+            onChange={(kpi) => updateFilters({ kpi })}
+          />
+        </FilterGroup>
+
         <FilterGroup label="Ниша">
           <SelectChips
             options={NICHES}
             value={filters.niche}
-            onChange={(niche) => onChange({ ...filters, niche })}
+            onChange={(niche) => updateFilters({ niche })}
           />
         </FilterGroup>
 
-        <FilterGroup label="Площадка">
-          <SelectChips
-            options={PLATFORMS}
-            value={filters.platform}
-            onChange={(platform) => onChange({ ...filters, platform })}
-          />
-        </FilterGroup>
-
-        <FilterGroup label="Цель кампании">
-          <SelectChips
-            options={GOALS}
-            value={filters.goal}
-            onChange={(goal) => onChange({ ...filters, goal })}
-          />
-        </FilterGroup>
-
-        <FilterGroup label="Возраст аудитории">
+        <FilterGroup label="Возраст аудитории" className="md:col-span-2">
           <SelectChips
             options={AGES}
             value={filters.age}
-            onChange={(age) => onChange({ ...filters, age })}
-          />
-        </FilterGroup>
-
-        <FilterGroup label="Пол" className="md:col-span-2">
-          <SelectChips
-            options={GENDERS}
-            value={filters.gender}
-            onChange={(gender) => onChange({ ...filters, gender })}
+            onChange={(age) => updateFilters({ age })}
           />
         </FilterGroup>
       </div>
@@ -86,18 +136,23 @@ export default function FilterPanel({ filters, onChange }: Props) {
 
 function FilterGroup({
   label,
+  hint,
   children,
   className = "",
 }: {
   label: string;
+  hint?: string;
   children: React.ReactNode;
   className?: string;
 }) {
   return (
     <div className={className}>
-      <label className="mb-2 block text-[11px] font-medium uppercase tracking-wider text-zinc-500">
-        {label}
-      </label>
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <label className="block text-[11px] font-medium uppercase tracking-wider text-zinc-500">
+          {label}
+        </label>
+        {hint ? <span className="text-[11px] text-zinc-600">{hint}</span> : null}
+      </div>
       {children}
     </div>
   );
@@ -119,20 +174,22 @@ function SelectChips<T extends string>({
 }) {
   return (
     <div className="flex flex-wrap gap-1.5">
-      {options.map((opt) => {
-        const active = opt.key === value;
+      {options.map((option) => {
+        const active = option.key === value;
+
         return (
           <button
-            key={opt.key}
+            key={option.key}
             type="button"
-            onClick={() => onChange(opt.key)}
+            aria-pressed={active}
+            onClick={() => onChange(option.key)}
             className={`relative rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${
               active
                 ? "border-teal-400/40 bg-teal-500/15 text-teal-300 shadow-[0_0_15px_rgba(45,212,191,0.15)]"
                 : "border-white/8 bg-white/[0.02] text-zinc-400 hover:border-white/20 hover:bg-white/[0.05] hover:text-zinc-200"
             }`}
           >
-            {opt.label}
+            {option.label}
           </button>
         );
       })}
